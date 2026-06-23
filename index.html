@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Archive AI & Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="phone-container">
+       
+        <div class="sidebar" id="sidebar">
+            <h2>MENU</h2>
+            <button onclick="switchPage('ai-page')">💬 Shiroko AI buatan chira</button>
+            <button onclick="switchPage('calc-page')">🧮 Kalkulator</button>
+        </div>
+
+        <div id="modeModal" class="modal">
+            <div class="modal-content">
+                <h2>Pilih Mode</h2>
+                <button class="modal-btn ai-mode-btn" onclick="selectMode('ai')">💬 Chat AI buatan chira</button>
+                <button class="modal-btn calc-mode-btn" onclick="selectMode('calc')">🧮 Kalkulator</button>
+            </div>
+        </div>
+
+        <header>
+            <button class="menu-btn" onclick="toggleModeMenu()">⋯</button>
+            <h1 id="header-title">Shiroko AI buatan chira</h1>
+        </header>
+
+        <div id="ai-page" class="page active">
+            <div class="chat-container" id="chat-box">
+                <div class="avatar-center">
+                    <div class="avatar-circle">
+                        <img src="https://i.pinimg.com/736x/29/db/ff/29dbff55f92c36055ac36ad93b90fdf0.jpg" alt="Shiroko">
+                    </div>
+                    <div class="avatar-label">Shiroko</div>
+                </div>
+                <div class="message ai-msg">
+                    <div class="msg-content">Halo, kamu perlu apa?</div>
+                    <span class="msg-time">00:00</span>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="user-input" onkeypress="handleEnter(event)" placeholder="Ketik pesan ke shiroko...">
+                <button onclick="kirimPesan()">Kirim</button>
+            </div>
+        </div>
+
+        <div id="calc-page" class="page">
+            <div class="calc-container">
+                <div class="calc-screen" id="screen">0</div>
+
+                <div class="calc-buttons">
+                    <button class="calc-btn btn-clear" onclick="clearScreen()">C</button>
+                    <button class="calc-btn btn-op" onclick="appendOperator('/')">÷</button>
+                    <button class="calc-btn btn-op" onclick="appendOperator('*')">×</button>
+                    <button class="calc-btn btn-op" onclick="deleteLast()">hapus</button>
+
+                    <button class="calc-btn btn-num" onclick="appendNumber('7')">7</button>
+                    <button class="calc-btn btn-num" onclick="appendNumber('8')">8</button>
+                    <button class="calc-btn btn-num" onclick="appendNumber('9')">9</button>
+                    <button class="calc-btn btn-op" onclick="appendOperator('-')">-</button>
+
+                    <button class="calc-btn btn-num" onclick="appendNumber('4')">4</button>
+                    <button class="calc-btn btn-num" onclick="appendNumber('5')">5</button>
+                    <button class="calc-btn btn-num" onclick="appendNumber('6')">6</button>
+                    <button class="calc-btn btn-op" onclick="appendOperator('+')">+</button>
+
+                    <button class="calc-btn btn-num" onclick="appendNumber('1')">1</button>
+                    <button class="calc-btn btn-num" onclick="appendNumber('2')">2</button>
+                    <button class="calc-btn btn-num" onclick="appendNumber('3')">3</button>
+                    <button class="calc-btn btn-equal" style="grid-row: span 2; height: 100%;" onclick="calculate()">=</button>
+
+                    <button class="calc-btn btn-num" style="grid-column: span 2;" onclick="appendNumber('0')">0</button>
+                    <button class="calc-btn btn-num" onclick="appendNumber('.')">.</button>
+                </div>
+                <div class="calc-footer">silahkan di coba</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="javascript.js"></script>
+</body>
+</html>
