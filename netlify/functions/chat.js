@@ -44,7 +44,7 @@ exports.handler = async function (event, context) {
             const errorData = await response.json();
             return {
                 statusCode: response.status,
-                body: JSON.stringify({ error: errorData.error?.message || "Ada error dari Groq bos" })
+                body: JSON.stringify({ error: errorData.error?.message || "Ada error dari Groq" })
             };
         }
 
