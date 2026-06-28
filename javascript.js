@@ -5,7 +5,10 @@ async function kirimPesan() {
     const inputField = document.getElementById("user-input");
     const pesan = inputField.value.trim();
     
-    if (!pesan) return;
+    if (!pesan || pesan.trim() === "") {
+        console.log("Pesan kosong, abort");
+        return;
+    }
 
     tambahPesanLayar(pesan, "user-msg");
     inputField.value = ""; 
@@ -50,6 +53,11 @@ function tambahPesanLayar(teks, className, isHTML = false, isImage = false) {
     const welcomeScreen = document.getElementById("welcome-screen");
     if (welcomeScreen) welcomeScreen.style.display = "none";
 
+    // Debug: log the text to see spaces
+    console.log("Text to display:", JSON.stringify(teks));
+    console.log("Text length:", teks.length);
+    console.log("Has spaces:", teks.includes(' '));
+
     const msgDiv = document.createElement("div");
     const msgId = "msg-" + Date.now() + Math.random().toString(36).substr(2, 5);
     msgDiv.id = msgId;
@@ -88,6 +96,7 @@ function tambahPesanLayar(teks, className, isHTML = false, isImage = false) {
 
 function handleEnter(event) {
     if (event.key === "Enter") {
+        event.preventDefault();
         kirimPesan();
     }
 }
@@ -104,7 +113,8 @@ function handleFileSelection(event) {
         const reader = new FileReader();
         reader.onload = function(e) {
             tambahPesanLayar(e.target.result, "user-msg", false, true);
-            kirimFileUntukAnalisis(file);
+            tambahPesanLayar("📎 File diterima! Apa yang ingin kamu tahu dari file ini?", "ai-msg");
+            tampilkanInputAnalisisFile(file);
         };
         reader.readAsDataURL(file);
     } else {
@@ -118,13 +128,33 @@ function handleFileSelection(event) {
             </div>
         `;
         tambahPesanLayar(fileHtml, "user-msg", true);
-        kirimFileUntukAnalisis(file);
+        tambahPesanLayar("📎 File diterima! Apa yang ingin kamu tahu dari file ini?", "ai-msg");
+        tampilkanInputAnalisisFile(file);
     }
 
     event.target.value = "";
 }
 
-async function kirimFileUntukAnalisis(file) {
+function tampilkanInputAnalisisFile(file) {
+    const inputField = document.getElementById("user-input");
+    inputField.placeholder = "Misalnya: 'Analisis file ini' atau 'Apa isi file?'";
+    inputField.focus();
+    
+    const originalKirimPesan = window.kirimPesan;
+    window.kirimPesan = function() {
+        const pertanyaan = inputField.value;
+        if (!pertanyaan || pertanyaan.trim() === "") return;
+        
+        tambahPesanLayar(pertanyaan, "user-msg");
+        inputField.value = "";
+        inputField.placeholder = "Ketik pesan ke shiroko...";
+        
+        window.kirimPesan = originalKirimPesan;
+        kirimFileUntukAnalisisDenganPertanyaan(file, pertanyaan);
+    };
+}
+
+async function kirimFileUntukAnalisisDenganPertanyaan(file, pertanyaan) {
     const loadingId = tambahPesanLayar('<div class="typing-dots"><span></span><span></span><span></span></div>', "ai-msg", true);
 
     const metadata = {
@@ -139,7 +169,7 @@ async function kirimFileUntukAnalisis(file) {
     }
 
     const body = {
-        pesan: "",
+        pesan: pertanyaan,
         fileMetadata: metadata,
         fileText: fileText,
     };
@@ -186,12 +216,13 @@ function formatFileSize(bytes) {
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
+
 // --- LOGIKA KALKULATOR ---
 const screen = document.getElementById('screen');
 let currentInput = '0';
 
 function updateScreen() {
-    screen.innerText = currentInput;
+    if (screen) screen.innerText = currentInput;
 }
 
 window.appendNumber = function(num) {
@@ -247,26 +278,32 @@ window.deleteLast = function() {
 // --- NAVIGASI HALAMAN & MODE ---
 function switchPage(pageId) {
     document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-    document.getElementById(pageId).classList.add('active');
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) targetPage.classList.add('active');
     
-    if (pageId === 'ai-page') {
-        document.getElementById('header-title').textContent = '💬 Shiroko AI buatan chira';
-    } else if (pageId === 'calc-page') {
-        document.getElementById('header-title').textContent = '🧮 Kalkulator';
-    } else if (pageId === 'game-page') {
-        document.getElementById('header-title').textContent = '🎮 Game Tetris';
+    const headerTitle = document.getElementById('header-title');
+    if (headerTitle) {
+        if (pageId === 'ai-page') {
+            headerTitle.textContent = '💬 Shiroko AI buatan chira';
+        } else if (pageId === 'calc-page') {
+            headerTitle.textContent = '🧮 Kalkulator';
+        } else if (pageId === 'game-page') {
+            headerTitle.textContent = '🎮 Game Tetris';
+        }
     }
     
-    // Tutup sidebar
-    document.getElementById('sidebar').classList.remove('active');
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.remove('active');
 }
 
 function toggleModeMenu() {
-    document.getElementById('sidebar').classList.toggle('active');
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.toggle('active');
 }
 
 function selectMode(mode) {
-    document.getElementById('modeModal').classList.remove('active');
+    const modal = document.getElementById('modeModal');
+    if (modal) modal.classList.remove('active');
     if (mode === 'ai') {
         switchPage('ai-page');
     } else if (mode === 'calc') {
@@ -578,8 +615,11 @@ function mulaiGame() {
     bentukBerikutnya = buatBentukBaru();
     bentukSaatIni = buatBentukBaru();
 
-    document.getElementById('gameOver').style.display = 'none';
-    document.getElementById('pauseScreen').style.display = 'none';
+    const gameOverScreen = document.getElementById('gameOver');
+    if (gameOverScreen) gameOverScreen.style.display = 'none';
+    
+    const pauseScreen = document.getElementById('pauseScreen');
+    if (pauseScreen) pauseScreen.style.display = 'none';
 
     waktuTerakhir = performance.now();
     requestAnimationFrame(loopPermainan);
@@ -593,21 +633,29 @@ function gameSelesai() {
     if (rekorBaru) {
         rekorTertinggi = skor;
         localStorage.setItem('tetrisHighScore', rekorTertinggi.toString());
-        document.getElementById('newHighSore').style.display = 'block';
+        const newHighScoreElem = document.getElementById('newHighSore');
+        if (newHighScoreElem) newHighScoreElem.style.display = 'block';
     } else {
-        document.getElementById('newHighSore').style.display = 'none';
+        const newHighScoreElem = document.getElementById('newHighSore');
+        if (newHighScoreElem) newHighScoreElem.style.display = 'none';
     }
 
-    document.getElementById('finalScore').textContent = skor;
-    document.getElementById('finalLines').textContent = totalBaris;
-    document.getElementById('gameOver').style.display = 'flex';
+    const finalScoreElem = document.getElementById('finalScore');
+    if (finalScoreElem) finalScoreElem.textContent = skor;
+    
+    const finalLinesElem = document.getElementById('finalLines');
+    if (finalLinesElem) finalLinesElem.textContent = totalBaris;
+    
+    const gameOverScreen = document.getElementById('gameOver');
+    if (gameOverScreen) gameOverScreen.style.display = 'flex';
 }
 
 function toggleJeda() {
     if (!gameJalan) return;
 
     gameJeda = !gameJeda;
-    document.getElementById('pauseScreen').style.display = gameJeda ? 'flex' : 'none';
+    const pauseScreen = document.getElementById('pauseScreen');
+    if (pauseScreen) pauseScreen.style.display = gameJeda ? 'flex' : 'none';
 
     if (!gameJeda) {
         waktuTerakhir = performance.now();
@@ -651,7 +699,13 @@ function handleRotationTouch() {
     putarBentukSekarang();
 }
 
+// --- PERBAIKAN EVENT LISTENER KEYBOARD (KUNCI SPASI AMAN DI SINI) ---
 document.addEventListener('keydown', (e) => {
+    // Jika user sedang mengetik di input field chat, abaikan kontrol game sepenuhnya
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        return; 
+    }
+
     if (e.key === ' ' || e.key === 'Spacebar') {
         e.preventDefault();
         if (!gameJalan) return;
@@ -699,6 +753,11 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.addEventListener('keyup', (e) => {
+    // Jika user sedang mengetik di input field chat, abaikan lepas tombol game
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        return; 
+    }
+
     if (e.key === ' ' || e.key === 'Spacebar') {
         spasiDitekan = false;
     }
