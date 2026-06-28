@@ -104,6 +104,7 @@ function handleFileSelection(event) {
         const reader = new FileReader();
         reader.onload = function(e) {
             tambahPesanLayar(e.target.result, "user-msg", false, true);
+            kirimFileUntukAnalisis(file);
         };
         reader.readAsDataURL(file);
     } else {
@@ -117,9 +118,67 @@ function handleFileSelection(event) {
             </div>
         `;
         tambahPesanLayar(fileHtml, "user-msg", true);
+        kirimFileUntukAnalisis(file);
     }
 
     event.target.value = "";
+}
+
+async function kirimFileUntukAnalisis(file) {
+    const loadingId = tambahPesanLayar('<div class="typing-dots"><span></span><span></span><span></span></div>', "ai-msg", true);
+
+    const metadata = {
+        name: file.name,
+        type: file.type || "unknown",
+        size: formatFileSize(file.size),
+    };
+
+    let fileText = null;
+    if (file.type.startsWith("text/") || file.name.match(/\.(txt|md|csv|json|html|js|py|css)$/i)) {
+        fileText = await bacaFileTeks(file);
+    }
+
+    const body = {
+        pesan: "",
+        fileMetadata: metadata,
+        fileText: fileText,
+    };
+
+    try {
+        const response = await fetch(BACKEND_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP Error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const balasanAI = data.choices[0].message.content;
+        const targetMessageElement = document.getElementById(loadingId).querySelector('.msg-content');
+        targetMessageElement.innerText = balasanAI;
+    } catch (error) {
+        const targetMessageElement = document.getElementById(loadingId).querySelector('.msg-content');
+        targetMessageElement.innerText = `Aduh bos, ada kendala di analisis file: ${error.message}`;
+    }
+}
+
+function bacaFileTeks(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            resolve(e.target.result);
+        };
+        reader.onerror = function() {
+            reject(new Error("Gagal membaca file teks."));
+        };
+        reader.readAsText(file);
+    });
 }
 
 function formatFileSize(bytes) {
