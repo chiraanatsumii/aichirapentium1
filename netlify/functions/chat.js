@@ -25,7 +25,7 @@ exports.handler = async function (event, context) {
                 },
                 {
                     role: "user",
-                    content: pesan_kamu
+                    content: pesan_bos
                 }
             ]
         };
