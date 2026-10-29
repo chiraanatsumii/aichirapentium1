@@ -16,7 +16,7 @@ exports.handler = async function (event, context) {
         const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
         const payload = {
-            model: "llama-3.1-8b-instant",
+            model: "openai/gpt-oss-20b",
             temperature: 0.3,
             messages: [
                 {
